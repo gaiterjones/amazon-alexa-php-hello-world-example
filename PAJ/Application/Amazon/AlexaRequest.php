@@ -103,10 +103,12 @@ class AlexaRequest
 				if ($_debug)
 				{
 						
+					$_now = new \DateTime(null, new \DateTimeZone($this->__config->get('timezone')));
+					
 					//
 					// debug alexa request to log file
 					//
-					$_request   = date(DATE_RFC2822) . "\n";
+					$_request = $_now->format(\DateTime::RFC1123) . "\n";
 			
 					//
 					// Log Apache headers
@@ -267,7 +269,8 @@ class AlexaRequest
 				if ($_success)
 				{
 					$_response=$_output['intent'][$_alexaIntent]['response'];
-					$this->respond($_response);
+					$_card=$_output['intent'][$_alexaIntent]['card'];
+					$this->respond($_response,$_card);
 					
 				} else {
 					
@@ -322,8 +325,53 @@ class AlexaRequest
 		//
 		// return json response to amazon
 		// 
-		private function respond($_alexaResponse, $_endSession = true, $_card=false) {
+		private function respond($_alexaResponse, $_card=false, $_endSession=true) {
 
+			$_cardJSON='';
+			
+			if (is_array($_card))
+			{
+				if (!$_card['text']) {$_card['text']=$_alexaResponse;}
+				if (!$_card['title']) {$_card['title']=$this->get('applicationName');}
+				if (!$_card['image']) {$_card['image']='default';}
+				
+				// custom card
+				$_cardJSON='
+						"card" : 
+						{
+						  "type": "Standard",
+						  "title": "'. $_card['title']. '",
+						  "text": "'. $_card['text']. '",
+							"image": 
+							{
+								"smallImageUrl": "'. $this->get('applicationURL'). 'alexaCardImage.php?size=small&image='. $_card['image']. '",
+								"largeImageUrl": "'. $this->get('applicationURL'). 'alexaCardImage.php?size=large&image='. $_card['image']. '"
+							}
+						},
+					';				
+				
+			} else {
+				$_card=false;
+			}
+			
+			if ($_card===false)
+			{
+				// default card
+				$_cardJSON='
+						"card" : 
+						{
+						  "type": "Standard",
+						  "title": "'. $this->get('applicationName'). '",
+						  "text": "'. $_alexaResponse. '",
+							"image": 
+							{
+								"smallImageUrl": "'. $this->get('applicationURL'). 'alexaCardImage.php?size=small&image=default",
+								"largeImageUrl": "'. $this->get('applicationURL'). 'alexaCardImage.php?size=large&image=default"
+							}
+						},
+					';
+			}
+			
 			// End session
 			//
 			$_shouldEndSession = $_endSession ? 'true' : 'false';
@@ -331,17 +379,13 @@ class AlexaRequest
 			// JSON
 			$_json = '{
 						"version" : "1.0",
-						"response" : {
-							"outputSpeech" : {"type" : "PlainText","text" : "'.$_alexaResponse.'"},
-							"card": {
-							  "type": "Standard",
-							  "title": "'. $this->get('applicationName'). '",
-							  "text": "'. $_alexaResponse. '",
-							  "image": {
-								"smallImageUrl": "'. $this->get('applicationURL'). 'images/card-small.png",
-								"largeImageUrl": "'. $this->get('applicationURL'). 'images/card-large.png"
-							  }
-							},		
+						"response" :
+						    {
+								"outputSpeech" : 
+								{
+									"type" : "PlainText","text" : "'.$_alexaResponse.'"
+								},
+							'. $_cardJSON. '
 							"shouldEndSession" : '.$_shouldEndSession.'
 							}
 						}
@@ -354,7 +398,7 @@ class AlexaRequest
 			
 			// header
 			//
-			header('Content-Type: application/json;charset=UTF-8');
+			header('Content-Type: application/json;charset=UTF-8');			
 			header('Content-Length: ' . strlen($_json));
 			echo $_json;
 

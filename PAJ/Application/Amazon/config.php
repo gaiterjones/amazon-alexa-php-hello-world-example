@@ -18,6 +18,10 @@ class config
 	const amazonUserId = 'amzn1.ask.account.XXX';
 	const amazonEchoServiceDomain = 'echo-api.amazon.com';
 	const amazonCacheFolder='/home/www/amazon/cache/';
+	const amazonCardImageFolder='/home/www/PAJ/www/Amazon/Alexa/images/card/';
+	
+	// timezone
+	const timezone='Europe/Berlin';		
 
 	// configure memcache
 	const useMemcache=false;
