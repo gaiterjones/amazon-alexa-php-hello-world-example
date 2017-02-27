@@ -167,8 +167,8 @@ class AlexaRequest
 				if ($_applicationId != $this->__config->get('amazonSkillId')) throw new \Exception('Invalid Application id: ' . $_applicationId);
 
 				// validate user id
-				//
-				if ($_userId != $this->__config->get('amazonUserId')) throw new \Exception('Invalid User id: ' . $userId);
+				// for private skill dev
+				//if ($_userId != $this->__config->get('amazonUserId')) throw new \Exception('Invalid User id: ' . $userId);
 
 				// Determine if we need to download a new Signature Certificate Chain from Amazon
 				//
