@@ -3,7 +3,7 @@
  *  PAJ\Library
 	Log Controller Class
  '
- *  Copyright (C) 2016
+ *  Copyright (C) 2017
  *
  *
  *  @who	   	PAJ

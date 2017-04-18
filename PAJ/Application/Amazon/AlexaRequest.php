@@ -1,7 +1,7 @@
 <?php
 /**
  *  
- *  Copyright (C) 2016
+ *  Copyright (C) 2017
  *
  *
  *  @who	   	PAJ
@@ -80,7 +80,7 @@ class AlexaRequest
 		
 		$this->set('version',$_version);
 		$this->set('versionNumber',$_versionNumber);
-		$this->set('amazonLogFile',$this->__config->get('amazonCacheFolder'). 'home-1-0');
+		$this->set('amazonLogFile',$this->__config->get('amazonCacheFolder'). 'helloworld-1-0');
 		$this->set('amazonLogFolder',$this->__config->get('amazonCacheFolder'));
 		$this->set('applicationURL',$this->__config->get('applicationURL'));
 		$this->set('applicationName',$this->__config->get('applicationName'));
@@ -168,6 +168,7 @@ class AlexaRequest
 
 				// validate user id
 				// for private skill dev
+				//
 				//if ($_userId != $this->__config->get('amazonUserId')) throw new \Exception('Invalid User id: ' . $userId);
 
 				// Determine if we need to download a new Signature Certificate Chain from Amazon
@@ -270,7 +271,10 @@ class AlexaRequest
 				{
 					$_response=$_output['intent'][$_alexaIntent]['response'];
 					$_card=$_output['intent'][$_alexaIntent]['card'];
-					$this->respond($_response,$_card);
+					$_endSession=$_output['intent'][$_alexaIntent]['endsession'];
+					$_sessionAttributes=$_output['intent'][$_alexaIntent]['sessionattributes'];
+					
+					$this->respond($_response,$_card,$_endSession,$_sessionAttributes);
 					
 				} else {
 					
@@ -325,7 +329,7 @@ class AlexaRequest
 		//
 		// return json response to amazon
 		// 
-		private function respond($_alexaResponse, $_card=false, $_endSession=true) {
+		private function respond($_alexaResponse, $_card=false, $_endSession=true, $_sessionAttributes=false) {
 
 			$_cardJSON='';
 			
@@ -376,9 +380,20 @@ class AlexaRequest
 			//
 			$_shouldEndSession = $_endSession ? 'true' : 'false';
 			
+			$_sessionAttributeJSON='';
+			
+			if ($_sessionAttributes)
+			{
+				$_sessionAttributeJSON='
+					"sessionAttributes" : '. json_encode ($_sessionAttributes).
+					',				
+				';
+			}
+			
 			// JSON
 			$_json = '{
 						"version" : "1.0",
+						'. $_sessionAttributeJSON. '
 						"response" :
 						    {
 								"outputSpeech" : 
