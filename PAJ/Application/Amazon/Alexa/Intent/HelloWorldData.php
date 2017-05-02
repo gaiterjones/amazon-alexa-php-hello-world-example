@@ -12,10 +12,11 @@ namespace PAJ\Application\Amazon\Alexa\Intent;
  * ALEXA INTENT DATA CLASS
  * 
  */
-class Data {
+class HelloWorldData {
+	
 	// "clever" quotes
 	//
-	function cleverQuotes()
+	static function cleverQuotes()
 	{
 		return array(
 			"Give a man a match, and he'll be warm for a minute, but set him on fire, and he'll be warm for the rest of his life.",

@@ -109,7 +109,7 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 		
 		// clever quotes data
 		//
-		$_cleverQuotesData=Data::cleverQuotes();
+		$_cleverQuotesData=HelloWorldData::cleverQuotes();
 		$_cleverQuotesArrayKeys = range(0, (count($_cleverQuotesData)-1));
 		shuffle($_cleverQuotesArrayKeys);
 
