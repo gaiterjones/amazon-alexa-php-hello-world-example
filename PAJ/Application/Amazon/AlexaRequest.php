@@ -69,9 +69,18 @@ class AlexaRequest
 
 			} else {
 				
-				// error response to alexa
-				//
-				$this->respond('Sorry, an Error has occured. The error has been logged.');
+				if ($this->get('validalexarequest') === 'true')
+				{
+					// error response to alexa
+					//
+					$this->respond('Sorry, an Error has occured. The error has been logged.');
+					
+				} else {
+					
+					// validation failure
+					//
+					exit;
+				}
 			
 			}
 		
@@ -158,6 +167,8 @@ class AlexaRequest
 	{
 		if (php_sapi_name() === 'cli') {exit;}
 		
+		$this->set('validalexarequest','false');
+		
 		//
 		// Validations based on API documentation at:
 		// https://developer.amazon.com/appsandservices/solutions/alexa/alexa-skills-kit/docs/developing-an-alexa-skill-as-a-web-service#Checking%20the%20Signature%20of%20the%20Request
@@ -189,8 +200,22 @@ class AlexaRequest
 			//
 			//if ($_userId != $this->__config->get('amazonUserId')) throw new \Exception('Invalid User id: ' . $userId);
 
-			// Determine if we need to download a new Signature Certificate Chain from Amazon
+			// validate signature data key
 			//
+			if (!isset($_SERVER['HTTP_SIGNATURECERTCHAINURL']))
+			{
+				throw new \Exception('HTTP_SIGNATURECERTCHAINURL key not present');
+			}
+			
+			// validate signature data
+			//			
+			if (empty($_SERVER['HTTP_SIGNATURECERTCHAINURL']))
+			{
+				throw new \Exception('HTTP_SIGNATURECERTCHAINURL data not present');
+			}
+			
+			// Determine if we need to download a new Signature Certificate Chain from Amazon
+			//			
 			$_md5pem = md5($_SERVER['HTTP_SIGNATURECERTCHAINURL']);
 			$_md5pem = $_md5pem . '.pem';
 
@@ -207,7 +232,7 @@ class AlexaRequest
 			// Validate certificate chain and signature
 			//
 			$_pem = file_get_contents($this->get('amazonLogFolder').$_md5pem);
-			$_ssl_check = openssl_verify($this->get('alexajsonrequest'), base64_decode($_SERVER['HTTP_SIGNATURE']), $_pem);
+			$_ssl_check = openssl_verify($this->get('alexajsonrequest'), base64_decode($_SERVER['HTTP_SIGNATURE']), $_pem, 'sha1');
 			if ($_ssl_check != 1)
 			{
 				throw new \Exception(openssl_error_string());
@@ -234,6 +259,7 @@ class AlexaRequest
 			$_validTo   = $_parsedCertificate['validTo_time_t'];
 			
 			$_now=new \DateTime();
+			
 			$_time = $_now->getTimestamp();
 			if (!($_validFrom <= $_time && $_time <= $_validTo)) {
 				throw new \Exception('certificate expiration check failed');
@@ -243,7 +269,10 @@ class AlexaRequest
 			//
 			$_alexaRequestTimestamp   = @$_alexaRequest['request']['timestamp'];
 			if ($_now->getTimestamp() - strtotime($_alexaRequestTimestamp) > 60)
-				throw new \Exception('timestamp validation failure.. Current time: ' . $_now->getTimestamp() . ' vs. Timestamp: ' . $_alexaRequestTimestamp);
+				throw new \Exception('timestamp validation failure.. Current time: ' . $_now->format('Y-m-d\TH:i:s\Z') . ' vs. Timestamp: ' . $_alexaRequestTimestamp);
+			
+			
+			$this->set('validalexarequest','true');
 
 		} // request does not originate from public ip space
 		
