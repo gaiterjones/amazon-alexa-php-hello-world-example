@@ -151,6 +151,17 @@ class AlexaRequest
 				$_request .= "\n\nPHP Array from JSON: ";
 				$_request .= print_r($this->get('alexarequest'), true);
 				
+				if (isset($_data['request']['timestamp']))
+				{
+					// TIMESTAMP DEBUG
+					$_now = new \DateTime(null, new \DateTimeZone('UTC'));
+					$_alexaRequestTimestamp = new \DateTime($_data['request']['timestamp'], new \DateTimeZone('UTC'));
+					
+					$_request .= "\n\nTIMESTAMPS: ";
+					$_request .= "AMAZON:". $_alexaRequestTimestamp->getTimestamp(). ' ME:'. $_now->getTimestamp()."\n";
+					$_request .= "COMPARE:". $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'). ' = '.  $_now->format('Y-m-d\TH:i:s\Z')."\n\n";
+				}
+				
 				$_logToFile=new \PAJ\Library\Log\LogToFile(
 					array(
 						'logfile' => $this->get('amazonLogFile'),
@@ -187,7 +198,8 @@ class AlexaRequest
 			$_sessionId          = @$_alexaRequest['session']['sessionId'];
 			$_applicationId      = @$_alexaRequest['session']['application']['applicationId'];
 			$_userId             = @$_alexaRequest['session']['user']['userId'];
-			$_requestTimestamp   = @$_alexaRequest['request']['timestamp'];				
+			
+			//$_requestTimestamp   = @$_alexaRequest['request']['timestamp'];				
 			
 			if (!is_array($_alexaRequest)) { throw new \Exception('Invalid alexa request data.'); }
 
@@ -258,18 +270,24 @@ class AlexaRequest
 			$_validFrom = $_parsedCertificate['validFrom_time_t'];
 			$_validTo   = $_parsedCertificate['validTo_time_t'];
 			
-			$_now=new \DateTime();
-			
+			$_now = new \DateTime(null, new \DateTimeZone('UTC'));
 			$_time = $_now->getTimestamp();
+			
 			if (!($_validFrom <= $_time && $_time <= $_validTo)) {
 				throw new \Exception('certificate expiration check failed');
 			}
-
+			
+			if (!isset($_alexaRequest['request']['timestamp'])) {
+				throw new \Exception('No timestamp detected.');
+			}
+			
 			// Check the timestamp of the request and ensure it was within the past minute
 			//
-			$_alexaRequestTimestamp   = @$_alexaRequest['request']['timestamp'];
-			if ($_now->getTimestamp() - strtotime($_alexaRequestTimestamp) > 60)
-				throw new \Exception('timestamp validation failure.. Current time: ' . $_now->format('Y-m-d\TH:i:s\Z') . ' vs. Timestamp: ' . $_alexaRequestTimestamp);
+			$_alexaRequestTimestamp = new \DateTime($_data['request']['timestamp'], new \DateTimeZone('UTC'));
+			if (($_now->getTimestamp() - $_alexaRequestTimestamp->getTimestamp()) > 60)
+			{
+				throw new \Exception('timestamp validation failure.. Current time: ' . $_now->format('Y-m-d\TH:i:s\Z') . ' vs. Timestamp: ' . $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'));
+			}
 			
 			
 			$this->set('validalexarequest','true');
