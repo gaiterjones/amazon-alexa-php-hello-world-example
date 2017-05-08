@@ -60,14 +60,20 @@ class AlexaRequest
 			//
 			if(isset($_GET['debug']))
 			{
+				$_now = new \DateTime(null, new \DateTimeZone('UTC'));
 				echo '
 					<h1>'. __CLASS__. '</h1>
+					<h1>debug</h1>
 					<pre>
-						error :
-						'.  $e->getMessage(). '
-						debug : 
-						logfolder '. (is_writable($this->get('amazonLogFolder')) ? 'is writeable' : 'is NOT writeable'). ' 
+						time : '. $_now->format('Y-m-d\TH:i:s\Z'). '
+						error :	'.  $e->getMessage(). '
+						debug :	logfolder '. (is_writable($this->get('amazonLogFolder')) ? 'is writeable' : 'is NOT writeable'). ' 
 					</pre>
+					<p>Error <em>HTTP GET when POST was expected</em> is normal when browsing this page, use curl from command line to debug validation with POST data :</p>
+					<pre style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">
+					curl -H "Content-Type: application/json" -H "SignatureCertChainUrl: https://s3.amazonaws.com/echo.api/echo-api-cert-2.pem" -H "Signature: OMEN68E8S0H9vTHRBVQMmWxeXLV8hpQoodoU6NdLAUB12BjGVvOAgCq7LffPDKCW7zXI6wRc3dx0pklYWqZHXbNsMfx8xSN3lqJTYw6zLZGwt2MgcjajHa1AnMbTnZOjrq9WPZuFG0pyJj9ucKB0w/k4r123vOLzVI0pEISo3WTIDsfKMycIpGiNcDHdJIc2LQGG5Bum9TFJuUllpt5c5LQC9g1rKIS2nj55QCQ8a3EeeqDe3N85Sw6OT7k7oPkKVLPee5fAWfkQQqW1fmA7sGIWKDpVTi1Jq46I2MiJM+48m+rxOVEPXky3j8u8+lPWg6vOnKogoXTb52foAurmAA==" -X POST -d "{\"version\":\"1.0\",\"session\":{\"new\":true,\"sessionId\":\"amzn1.echo-api.session\",\"application\":{\"applicationId\":\"'.$this->__config->get('amazonSkillId').'\"},\"user\":{\"userId\":\"'. $this->__config->get('amazonUserId'). '\",\"accessToken\":\"token\"}},\"request\":{\"type\":\"LaunchRequest\",\"requestId\":\"amzn1.echo-api.request\",\"timestamp\":\"'. $_now->format('Y-m-d\TH:i:s\Z'). '\"}}" --verbose https://'. $_SERVER[HTTP_HOST].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER[REQUEST_URI]). '
+					</pre>
+					<a href="http://blog.gaiterjones.com">blog.gaiterjones.com</a>
 				';
 
 			} else {
@@ -82,7 +88,7 @@ class AlexaRequest
 					
 					// validation failure
 					//
-					//echo 'Validation Failure : ' .$this->get('errorMessage')."\n";
+					echo header('alexa request validation failed : ' .$e->getMessage(), true, 400);
 					exit;
 				}
 			
@@ -103,7 +109,7 @@ class AlexaRequest
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 		
-		$_debug=false; // enable for debug logging
+		$_debug=true; // enable for debug logging
 		
 		$this->set('debug',$_debug);
 		$this->set('version',$_version);
@@ -125,7 +131,7 @@ class AlexaRequest
 		//
 		$_jsonRequest    = file_get_contents('php://input');
 		$_data           = json_decode($_jsonRequest, true);
-	
+		
 		$this->set('alexarequest',$_data);
 		$this->set('alexajsonrequest',$_jsonRequest);
 		
