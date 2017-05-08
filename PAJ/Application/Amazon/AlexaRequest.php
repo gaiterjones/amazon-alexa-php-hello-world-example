@@ -78,7 +78,7 @@ class AlexaRequest
 
 			} else {
 				
-				if ($this->get('validalexarequest') === 'true')
+				if ($this->get('validatexarequest') === 'true')
 				{
 					// error response to alexa
 					//
@@ -189,7 +189,7 @@ class AlexaRequest
 	{
 		if (php_sapi_name() === 'cli') {exit;}
 		
-		$this->set('validalexarequest','false');
+		$this->set('validatexarequest','false');
 		
 		//
 		// Validations based on API documentation at:
@@ -306,7 +306,7 @@ class AlexaRequest
 			}
 			
 			
-			$this->set('validalexarequest','true');
+			$this->set('validatexarequest','true');
 
 		} // request does not originate from public ip space
 		
