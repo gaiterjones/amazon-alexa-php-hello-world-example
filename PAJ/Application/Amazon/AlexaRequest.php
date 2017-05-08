@@ -44,15 +44,18 @@ class AlexaRequest
 		{
 	    	$this->set('errorMessage', 'ERROR : '. $e->getMessage(). "\n". $this->getExceptionTraceAsString($e));
 			
-			// log errors
-			//
-			$_logToFile=new \PAJ\Library\Log\LogToFile(
-				array(
-					'logfile' => $this->get('amazonLogFile'),
-					'data' => $this->get('errorMessage')
-				));
-					unset($_logToFile);	
-					
+			if ($this->get('debug'))
+			{
+				// log errors
+				//
+				$_logToFile=new \PAJ\Library\Log\LogToFile(
+					array(
+						'logfile' => $this->get('amazonLogFile'),
+						'data' => $this->get('errorMessage')
+					));
+						unset($_logToFile);	
+			}
+			
 			// debug
 			//
 			if(isset($_GET['debug']))
@@ -79,6 +82,7 @@ class AlexaRequest
 					
 					// validation failure
 					//
+					//echo 'Validation Failure : ' .$this->get('errorMessage')."\n";
 					exit;
 				}
 			
@@ -99,6 +103,9 @@ class AlexaRequest
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 		
+		$_debug=false; // enable for debug logging
+		
+		$this->set('debug',$_debug);
 		$this->set('version',$_version);
 		$this->set('versionNumber',$_versionNumber);
 		$this->set('amazonLogFile',$this->__config->get('amazonCacheFolder'). 'alexarequest');
@@ -118,57 +125,55 @@ class AlexaRequest
 		//
 		$_jsonRequest    = file_get_contents('php://input');
 		$_data           = json_decode($_jsonRequest, true);
-		
+	
 		$this->set('alexarequest',$_data);
 		$this->set('alexajsonrequest',$_jsonRequest);
 		
-			$_debug=true; // enable for debug logging
+		if ($this->get('debug'))
+		{
+				
+			$_now = new \DateTime(null, new \DateTimeZone($this->__config->get('timezone')));
 			
-			if ($_debug)
+			//
+			// debug alexa request to log file
+			//
+			$_request = $_now->format(\DateTime::RFC1123) . "\n";
+	
+			//
+			// Log request headers apache/nginx
+			//
+			$_headers = $this->get_request_headers();
+	
+			foreach ($_headers as $_header => $_value) {
+			   $_request .= "$_header: $_value \n";
+			}
+	
+			// HTTP POST Data
+			$_request .= "HTTP Raw Data: ";
+			$_request .= $this->get('alexajsonrequest');
+	
+			// PHP Array from JSON
+			$_request .= "\n\nPHP Array from JSON: ";
+			$_request .= print_r($this->get('alexarequest'), true);
+			
+			if (isset($_data['request']['timestamp']))
 			{
-					
-				$_now = new \DateTime(null, new \DateTimeZone($this->__config->get('timezone')));
+				// TIMESTAMP DEBUG
+				$_now = new \DateTime(null, new \DateTimeZone('UTC'));
+				$_alexaRequestTimestamp = new \DateTime($_data['request']['timestamp'], new \DateTimeZone('UTC'));
 				
-				//
-				// debug alexa request to log file
-				//
-				$_request = $_now->format(\DateTime::RFC1123) . "\n";
-		
-				//
-				// Log request headers apache/nginx
-				//
-				$_headers = $this->get_request_headers();
-		
-				foreach ($_headers as $_header => $_value) {
-				   $_request .= "$_header: $_value \n";
-				}
-		
-				// HTTP POST Data
-				$_request .= "HTTP Raw Data: ";
-				$_request .= $this->get('alexajsonrequest');
-		
-				// PHP Array from JSON
-				$_request .= "\n\nPHP Array from JSON: ";
-				$_request .= print_r($this->get('alexarequest'), true);
-				
-				if (isset($_data['request']['timestamp']))
-				{
-					// TIMESTAMP DEBUG
-					$_now = new \DateTime(null, new \DateTimeZone('UTC'));
-					$_alexaRequestTimestamp = new \DateTime($_data['request']['timestamp'], new \DateTimeZone('UTC'));
-					
-					$_request .= "\n\nTIMESTAMPS: ";
-					$_request .= "AMAZON:". $_alexaRequestTimestamp->getTimestamp(). ' ME:'. $_now->getTimestamp()."\n";
-					$_request .= "COMPARE:". $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'). ' = '.  $_now->format('Y-m-d\TH:i:s\Z')."\n\n";
-				}
-				
-				$_logToFile=new \PAJ\Library\Log\LogToFile(
-					array(
-						'logfile' => $this->get('amazonLogFile'),
-						'data' => $_request
-					));
-						unset($_logToFile);	
-			}			
+				$_request .= "\n\nTIMESTAMPS: ";
+				$_request .= "AMAZON:". $_alexaRequestTimestamp->getTimestamp(). ' ME:'. $_now->getTimestamp()."\n";
+				$_request .= "COMPARE:". $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'). ' = '.  $_now->format('Y-m-d\TH:i:s\Z')."\n\n";
+			}
+			
+			$_logToFile=new \PAJ\Library\Log\LogToFile(
+				array(
+					'logfile' => $this->get('amazonLogFile'),
+					'data' => $_request
+				));
+					unset($_logToFile);	
+		}			
 	}
 	
 	//
@@ -208,7 +213,7 @@ class AlexaRequest
 			if ($_applicationId != $this->__config->get('amazonSkillId')) throw new \Exception('Invalid Application id: ' . $_applicationId);
 
 			// validate user id
-			// for private skill dev
+			// for private skill dev ???
 			//
 			//if ($_userId != $this->__config->get('amazonUserId')) throw new \Exception('Invalid User id: ' . $userId);
 
@@ -220,8 +225,13 @@ class AlexaRequest
 			}
 			
 			// validate signature data
-			//			
-			if (empty($_SERVER['HTTP_SIGNATURECERTCHAINURL']))
+			// for testing see https://github.com/AreYouFreeBusy/AlexaSkillsKit.NET/issues/5
+			
+			if (empty($_SERVER['HTTP_SIGNATURECERTCHAINURL']) ||
+				is_null($_SERVER['HTTP_SIGNATURECERTCHAINURL']) ||
+				$_SERVER['HTTP_SIGNATURECERTCHAINURL']=='null' ||
+				$_SERVER['HTTP_SIGNATURECERTCHAINURL']==''
+				)
 			{
 				throw new \Exception('HTTP_SIGNATURECERTCHAINURL data not present');
 			}
@@ -544,6 +554,7 @@ class AlexaRequest
 	protected function get_request_headers() {
 
 		// Based on: http://www.iana.org/assignments/message-headers/message-headers.xml#perm-headers
+		//
 		$arrCasedHeaders = array(
 			// HTTP
 			'Dasl'             => 'DASL',
