@@ -88,7 +88,7 @@ class AlexaRequest
 					
 					// validation failure
 					//
-					echo header('alexa request validation failed : ' .$e->getMessage(), true, 400);
+					header('alexa request validation failed : ' .$e->getMessage(), true, 400);
 					exit;
 				}
 			
