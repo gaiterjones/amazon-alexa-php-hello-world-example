@@ -241,6 +241,10 @@ class AlexaRequest
 			{
 				throw new \Exception('HTTP_SIGNATURECERTCHAINURL data not present');
 			}
+
+			// Validate proper format of Amazon provided certificate chain url
+			//
+			$this->validateKeychainUri($_SERVER['HTTP_SIGNATURECERTCHAINURL']);
 			
 			// Determine if we need to download a new Signature Certificate Chain from Amazon
 			//			
@@ -252,10 +256,6 @@ class AlexaRequest
 			if (!file_exists($this->get('amazonLogFolder').$_md5pem)) {
 				file_put_contents($this->get('amazonLogFolder').$_md5pem, file_get_contents($_SERVER['HTTP_SIGNATURECERTCHAINURL']));
 			}
-
-			// Validate proper format of Amazon provided certificate chain url
-			//
-			$this->validateKeychainUri($_SERVER['HTTP_SIGNATURECERTCHAINURL']);
 
 			// Validate certificate chain and signature
 			//
