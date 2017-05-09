@@ -9,6 +9,7 @@
  *  @license    blog.gaiterjones.com
  * 	 
  *  process and respond to amazon alexa requests
+ *  to debug browse to alexa.php?debug
  *
  */
 namespace PAJ\Application\Amazon;
@@ -60,10 +61,15 @@ class AlexaRequest
 			//
 			if(isset($_GET['debug']))
 			{
+				$_type='LaunchRequest';
+				
 				$_now = new \DateTime(null, new \DateTimeZone('UTC'));
+				
+				// show debug info
+				//
 				echo '
 					<h1>'. __CLASS__. '</h1>
-					<h1>debug</h1>
+					<h1>debug enabled</h1>
 					<pre>
 						time : '. $_now->format('Y-m-d\TH:i:s\Z'). '
 						error :	'.  $e->getMessage(). '
@@ -71,7 +77,7 @@ class AlexaRequest
 					</pre>
 					<p>Error <em>HTTP GET when POST was expected</em> is normal when browsing this page, use curl from command line to debug validation with POST data :</p>
 					<pre style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">
-					curl -H "Content-Type: application/json" -H "SignatureCertChainUrl: https://s3.amazonaws.com/echo.api/echo-api-cert-2.pem" -H "Signature: OMEN68E8S0H9vTHRBVQMmWxeXLV8hpQoodoU6NdLAUB12BjGVvOAgCq7LffPDKCW7zXI6wRc3dx0pklYWqZHXbNsMfx8xSN3lqJTYw6zLZGwt2MgcjajHa1AnMbTnZOjrq9WPZuFG0pyJj9ucKB0w/k4r123vOLzVI0pEISo3WTIDsfKMycIpGiNcDHdJIc2LQGG5Bum9TFJuUllpt5c5LQC9g1rKIS2nj55QCQ8a3EeeqDe3N85Sw6OT7k7oPkKVLPee5fAWfkQQqW1fmA7sGIWKDpVTi1Jq46I2MiJM+48m+rxOVEPXky3j8u8+lPWg6vOnKogoXTb52foAurmAA==" -X POST -d "{\"version\":\"1.0\",\"session\":{\"new\":true,\"sessionId\":\"amzn1.echo-api.session\",\"application\":{\"applicationId\":\"'.$this->__config->get('amazonSkillId').'\"},\"user\":{\"userId\":\"'. $this->__config->get('amazonUserId'). '\",\"accessToken\":\"token\"}},\"request\":{\"type\":\"LaunchRequest\",\"requestId\":\"amzn1.echo-api.request\",\"timestamp\":\"'. $_now->format('Y-m-d\TH:i:s\Z'). '\"}}" --verbose https://'. $_SERVER[HTTP_HOST].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER[REQUEST_URI]). '
+					curl -H "Content-Type: application/json" -H "SignatureCertChainUrl: https://s3.amazonaws.com/echo.api/echo-api-cert-2.pem" -H "Signature: OMEN68E8S0H9vTHRBVQMmWxeXLV8hpQoodoU6NdLAUB12BjGVvOAgCq7LffPDKCW7zXI6wRc3dx0pklYWqZHXbNsMfx8xSN3lqJTYw6zLZGwt2MgcjajHa1AnMbTnZOjrq9WPZuFG0pyJj9ucKB0w/k4r123vOLzVI0pEISo3WTIDsfKMycIpGiNcDHdJIc2LQGG5Bum9TFJuUllpt5c5LQC9g1rKIS2nj55QCQ8a3EeeqDe3N85Sw6OT7k7oPkKVLPee5fAWfkQQqW1fmA7sGIWKDpVTi1Jq46I2MiJM+48m+rxOVEPXky3j8u8+lPWg6vOnKogoXTb52foAurmAA==" -X POST -d "{\"version\":\"1.0\",\"session\":{\"new\":true,\"sessionId\":\"amzn1.echo-api.session\",\"application\":{\"applicationId\":\"'.$this->__config->get('amazonSkillId').'\"},\"user\":{\"userId\":\"'. $this->__config->get('amazonUserId'). '\",\"accessToken\":\"token\"}},\"request\":{\"type\":\"'. $_type. '\",\"requestId\":\"amzn1.echo-api.request\",\"timestamp\":\"'. $_now->format('Y-m-d\TH:i:s\Z'). '\"}}" --verbose https://'. $_SERVER[HTTP_HOST].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER[REQUEST_URI]). '
 					</pre>
 					<a href="http://blog.gaiterjones.com">blog.gaiterjones.com</a>
 				';
@@ -105,7 +111,7 @@ class AlexaRequest
 	{
 		$this->__config= new config();
 		
-		$_version='BETA v0.0.1';
+		$_version='BETA v0.1.0';
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 		
@@ -170,7 +176,7 @@ class AlexaRequest
 				
 				$_request .= "\n\nTIMESTAMPS: ";
 				$_request .= "AMAZON:". $_alexaRequestTimestamp->getTimestamp(). ' ME:'. $_now->getTimestamp()."\n";
-				$_request .= "COMPARE:". $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'). ' = '.  $_now->format('Y-m-d\TH:i:s\Z')."\n\n";
+				$_request .= "TIMESTAMP COMPARISON:". $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'). ' = '.  $_now->format('Y-m-d\TH:i:s\Z')."\n\n";
 			}
 			
 			$_logToFile=new \PAJ\Library\Log\LogToFile(
@@ -324,14 +330,60 @@ class AlexaRequest
 		//
 		$_alexaRequest=$this->get('alexarequest');
 		
-		// get intent
+		// render response for type LaunchRequest
 		//
-		if (isset($_alexaRequest['request']['intent']))
+		if ($_alexaRequest['request']['type']=='LaunchRequest')
+		{
+				$_response='Hello, how can I be of assistance?';
+				$_card=false;
+				$_endSession=false;
+				$_sessionAttributes=false;
+				$_outputSSML=false;
+				
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);	
+		}		
+		
+		// render response for type IntentRequest
+		//
+		if ($_alexaRequest['request']['type']=='IntentRequest' && isset($_alexaRequest['request']['intent']))
 		{
 			// render response from intent class
 			//
 			$_alexaIntent=$_alexaRequest['request']['intent']['name'];
 			
+			
+			// render default responses
+			//
+			// STOP // CANCEL
+			if ($_alexaIntent==='AMAZON.StopIntent' || $_alexaIntent==='AMAZON.CancelIntent')
+			{
+				$_response='Goodbye';
+				$_card=false;
+				$_endSession=true;
+				$_sessionAttributes=false;
+				$_outputSSML=false;
+				
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);				
+			}
+			
+			// render default responses
+			//
+			// HELP
+			if ($_alexaIntent==='AMAZON.HelpIntent')
+			{
+				// Render Custom HELP response
+				//
+				$_response='There is no help available for this skill.';
+				$_card=false;
+				$_endSession=true;
+				$_sessionAttributes=false;
+				$_outputSSML=false;
+				
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);				
+			}			
+			
+			// render custom response
+			//
 			$_alexaRenderClass = __NAMESPACE__ . '\\Alexa\\Intent\\'.ucfirst($_alexaIntent);
 			
 			if (!class_exists($_alexaRenderClass)) { throw new \Exception('Requested intent class '. $_alexaRenderClass. ' is not valid.'); }
@@ -374,6 +426,10 @@ class AlexaRequest
 				$this->respond($_response);
 			}
 			
+		}
+		
+		if ($this->get('debug'))
+		{
 			// log
 			//
 			$_logToFile=new \PAJ\Library\Log\LogToFile(
@@ -381,12 +437,11 @@ class AlexaRequest
 					'logfile' => $this->get('amazonLogFile'),
 					'data' => 'INTENT RESPONSE ARRAY: '. print_r($_output,true). "\n". 'JSON RESPONSE: '.$this->get('jsonresponse')
 				));
-					unset($_logToFile);	
-			
-			
-			// fin
-			exit;
+					unset($_logToFile);
 		}
+		
+		// fin
+		exit;
 	}
 	
 	//

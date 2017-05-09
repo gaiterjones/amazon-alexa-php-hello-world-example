@@ -21,11 +21,15 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 		// load parent
 		parent::__construct($_variables);
 		
-		// load intent 
+		$_alexaRequest=$this->get('alexarequest');
+		
+		// intent request
 		$this->intent();
+
 		
 	}
-	
+
+
 	protected function intent()
 	{
 		// init vars
@@ -53,6 +57,9 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 			$_sessionAttributes=false;
 			if (isset($_response['intent']['sessionattributes'])) {$_sessionAttributes=$_response['intent']['sessionattributes'];}
 			
+			$_outputSSML=false;
+			if (isset($_response['intent']['outputssml'])) {$_outputSSML=$_response['intent']['outputssml'];}
+
 			$this->set('success',true);
 			
 			$this->set('output',array(
@@ -64,6 +71,7 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 							'target' => $_response['intent']['target'],
 							'endsession' => $_endSession,
 							'sessionattributes' => $_sessionAttributes,
+							'outputssml' => $_outputSSML,
 							'locale' => $_locale,
 							'timestamp' => $_now->format('Y-m-d\TH:i:sP')
 						)
@@ -168,8 +176,6 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 						if ($_sessionData['object']==='clever quotes')
 						{
 
-
-							
 							// found target
 							//
 							// here you can parse the spoken words further to define more custom actions for your target object
@@ -278,7 +284,6 @@ class HelloWorld extends \PAJ\Application\Amazon\Controller {
 					
 					$this->set('spokenwords',$_spokenWords);
 					
-
 					// PARSE SPOKEN WORDS IF REQUIRED
 					// 
 					// clever quotes
