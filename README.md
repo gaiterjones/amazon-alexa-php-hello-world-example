@@ -1,13 +1,13 @@
 ## Amazon Alexa PHP Hello World Example
 
-[http://blog.gaiterjones.com/amazon-alexa-php-hello-world-example/)
+for installation and usage instructions see [http://blog.gaiterjones.com/amazon-alexa-php-hello-world-example/]
 
 ### Synopsis
-PHP Script demonstrating interaction with Amazon Alexa Voice services
+PHP Script for interaction with Amazon Alexa voice services. You can use this script to create a custom Alexa skill.
 
 ### Version
 ***
-	@version		0.0.1
+	@version		0.1.0
 	@since			12 2016
 	@author			gaiterjones
 	@documentation	http://blog.gaiterjones.com/amazon-alexa-php-hello-world-example/
