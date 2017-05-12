@@ -5,6 +5,14 @@ for installation and usage instructions see [http://blog.gaiterjones.com/amazon-
 ### Synopsis
 PHP Script for interaction with Amazon Alexa voice services. You can use this script to create a custom Alexa skill.
 
+### Features
+Alexa request validation meets Amazon requirements for publishing skills
+	Default intent responses
+	Default launch request response
+	Customiseable intent request response
+	Custom skill card text and images
+	SSML support
+
 ### Version
 ***
 	@version		0.1.0

@@ -86,9 +86,9 @@ class AlexaRequest
 				
 				if ($this->get('validatexarequest') === 'true')
 				{
-					// error response to alexa
+					// semi friendly error response to alexa
 					//
-					$this->respond('Sorry, an Error has occured. The error has been logged.');
+					$this->respond('Sorry, an Error has occurred. The error has been logged.');
 					
 				} else {
 					
@@ -111,7 +111,7 @@ class AlexaRequest
 	{
 		$this->__config= new config();
 		
-		$_version='BETA v0.1.0';
+		$_version='BETA v0.1.1';
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 		
@@ -222,7 +222,8 @@ class AlexaRequest
 
 			// validate application id
 			//
-			if ($_applicationId != $this->__config->get('amazonSkillId')) throw new \Exception('Invalid Application id: ' . $_applicationId);
+			$_myApplicationIds=explode(',',$this->__config->get('amazonSkillId'));
+			if (!in_array($_applicationId,$_myApplicationIds)) throw new \Exception('Invalid Application id: ' . $_applicationId);
 
 			// validate user id
 			// for private skill dev ???
@@ -330,34 +331,58 @@ class AlexaRequest
 		//
 		$_alexaRequest=$this->get('alexarequest');
 		
+		// buld classes for rendering
+		//
+		$_alexaIntent=$_alexaRequest['request']['intent']['name'];
+		$_alexaRenderClass = __NAMESPACE__ . '\\Alexa\\Intent\\'.ucfirst($_alexaIntent);
+		
+		$_alexaLaunchClass=false;
+		$_alexaHelpClass=false;
+		$_applicationID=explode('-',$_alexaRequest['session']['application']['applicationId']);
+		if (isset($_applicationID[4])){$_alexaLaunchClass = __NAMESPACE__ . '\\Alexa\\Launch\\'.$_applicationID[4];}
+		if (isset($_applicationID[4])){$_alexaHelpClass = __NAMESPACE__ . '\\Alexa\\Help\\'.$_applicationID[4];}
+		
 		// render response for type LaunchRequest
 		//
-		if ($_alexaRequest['request']['type']=='LaunchRequest')
-		{
-				$_response='Hello, how can I be of assistance?';
-				$_card=false;
-				$_endSession=false;
-				$_sessionAttributes=false;
-				$_outputSSML=false;
+
+			if ($_alexaRequest['request']['type']=='LaunchRequest')
+			{
+					
+				if (class_exists($_alexaLaunchClass))
+				{
+					$_launchResponse=$_alexaLaunchClass::launch();
+					$_response=$_launchResponse['response'];
+					$_card=$_launchResponse['card'];
+					$_endSession=$_launchResponse['endsession'];
+					$_sessionAttributes=$_launchResponse['sessionattributes'];
+					$_outputSSML=$_launchResponse['outputssml'];
+					
+				} else {
+					
+					$_response='Hello, how can I be of assistance?';
+					$_card=false;
+					$_endSession=false;
+					$_sessionAttributes=false;
+					$_outputSSML=false;
+					
+					
+				}
 				
-				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);	
-		}		
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
+			}
+
 		
 		// render response for type IntentRequest
 		//
 		if ($_alexaRequest['request']['type']=='IntentRequest' && isset($_alexaRequest['request']['intent']))
 		{
-			// render response from intent class
-			//
-			$_alexaIntent=$_alexaRequest['request']['intent']['name'];
-			
-			
+		
 			// render default responses
 			//
 			// STOP // CANCEL
-			if ($_alexaIntent==='AMAZON.StopIntent' || $_alexaIntent==='AMAZON.CancelIntent')
+			if ($_alexaIntent=='AMAZON.StopIntent' || $_alexaIntent=='AMAZON.CancelIntent')
 			{
-				$_response='Goodbye';
+				$_response='Goodbye.';
 				$_card=false;
 				$_endSession=true;
 				$_sessionAttributes=false;
@@ -371,21 +396,34 @@ class AlexaRequest
 			// HELP
 			if ($_alexaIntent==='AMAZON.HelpIntent')
 			{
-				// Render Custom HELP response
-				//
-				$_response='There is no help available for this skill.';
-				$_card=false;
-				$_endSession=true;
-				$_sessionAttributes=false;
-				$_outputSSML=false;
+				
+				if (class_exists($_alexaHelpClass))
+				{
+					// Render Custom HELP response
+				    //
+					$_helpResponse=$_alexaHelpClass::help();
+					$_response=$_helpResponse['response'];
+					$_card=$_helpResponse['card'];
+					$_endSession=$_helpResponse['endsession'];
+					$_sessionAttributes=$_helpResponse['sessionattributes'];
+					$_outputSSML=$_helpResponse['outputssml'];
+					
+				} else {
+
+					$_response='There is no help configured for this skill.';
+					$_card=false;
+					$_endSession=true;
+					$_sessionAttributes=false;
+					$_outputSSML=false;
+				
+				}
 				
 				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);				
 			}			
-			
-			// render custom response
+
+			// render custom response from intent class
+			//			
 			//
-			$_alexaRenderClass = __NAMESPACE__ . '\\Alexa\\Intent\\'.ucfirst($_alexaIntent);
-			
 			if (!class_exists($_alexaRenderClass)) { throw new \Exception('Requested intent class '. $_alexaRenderClass. ' is not valid.'); }
 			
 			// set app name to intent
@@ -507,9 +545,9 @@ class AlexaRequest
 			$_card=false;
 		}
 		
-		if ($_card===false)
+		if ($_card==='default')
 		{
-			// default card
+			// default card or NO card
 			//
 			$_cardJSON='
 					"card" : 
