@@ -12,6 +12,7 @@ Alexa request validation meets Amazon requirements for publishing skills
 	Customiseable intent request response
 	Custom skill card text and images
 	SSML support
+	Passes Amazon security validation for Public Skills
 
 ### Version
 ***
