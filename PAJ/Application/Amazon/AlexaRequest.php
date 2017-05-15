@@ -88,7 +88,7 @@ class AlexaRequest
 				{
 					// semi friendly error response to alexa
 					//
-					$this->respond('Sorry, an Error has occurred. The error has been logged.');
+					$this->respond('Sorry, an Error has occurred. The error has been logged and we are working on it!');
 					
 				} else {
 					
@@ -111,7 +111,7 @@ class AlexaRequest
 	{
 		$this->__config= new config();
 		
-		$_version='BETA v0.1.1';
+		$_version='BETA v0.1.2';
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 		
@@ -369,6 +369,7 @@ class AlexaRequest
 				}
 				
 				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
+				exit;
 			}
 
 		
@@ -388,7 +389,8 @@ class AlexaRequest
 				$_sessionAttributes=false;
 				$_outputSSML=false;
 				
-				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);				
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
+			
 			}
 			
 			// render default responses
@@ -410,7 +412,7 @@ class AlexaRequest
 					
 				} else {
 
-					$_response='There is no help configured for this skill.';
+					$_response='Sorry, there is no help configured for this skill.';
 					$_card=false;
 					$_endSession=true;
 					$_sessionAttributes=false;
@@ -418,7 +420,8 @@ class AlexaRequest
 				
 				}
 				
-				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);				
+				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
+				
 			}			
 
 			// render custom response from intent class
@@ -447,6 +450,18 @@ class AlexaRequest
 
 			unset($_obj);
 			
+			if ($this->get('debug'))
+			{
+				// log intent response data
+				//
+				$_logToFile=new \PAJ\Library\Log\LogToFile(
+					array(
+						'logfile' => $this->get('amazonLogFile'),
+						'data' => 'INTENT RESPONSE ARRAY: '. print_r($_output,true). "\n". 'JSON RESPONSE: '.$this->get('jsonresponse')
+					));
+						unset($_logToFile);
+			}			
+			
 			$_response='ERROR';
 			
 			if ($_success)
@@ -465,21 +480,7 @@ class AlexaRequest
 			}
 			
 		}
-		
-		if ($this->get('debug'))
-		{
-			// log
-			//
-			$_logToFile=new \PAJ\Library\Log\LogToFile(
-				array(
-					'logfile' => $this->get('amazonLogFile'),
-					'data' => 'INTENT RESPONSE ARRAY: '. print_r($_output,true). "\n". 'JSON RESPONSE: '.$this->get('jsonresponse')
-				));
-					unset($_logToFile);
-		}
-		
-		// fin
-		exit;
+
 	}
 	
 	//
@@ -605,8 +606,11 @@ class AlexaRequest
 		//
 		header('Content-Type: application/json;charset=UTF-8');			
 		header('Content-Length: ' . strlen($_json));
+		// data
 		echo $_json;
-
+		// done!
+		exit;
+		
 	}
 	
 	
