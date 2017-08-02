@@ -1,22 +1,22 @@
 <?php
 /**
- *  
+ *
  *  Copyright (C) 2017 paj@gaiterjones.com
  *
  *
  */
 
-namespace PAJ\Application\Amazon\Alexa\Intent;
+namespace PAJ\Application\AmazonDev\Alexa\Intent;
 
 /**
  * ALEXA INTENT DATA CLASS
- * 
+ *
  */
 class HelloWorldData {
-	
+
 	// "clever" quotes
 	//
-	static function cleverQuotes()
+	public static function cleverQuotes()
 	{
 		return array(
 			"Give a man a match, and he'll be warm for a minute, but set him on fire, and he'll be warm for the rest of his life.",
@@ -30,7 +30,7 @@ class HelloWorldData {
 			"The secret to creativity is knowing how to hide your sources.",
 			"Optimism: Waiting for a ship to come in when you haven't sent one out.",
 			"You know your god is man-made when he hates all the same people you do."
-		);	
+		);
 	}
 }
 ?>

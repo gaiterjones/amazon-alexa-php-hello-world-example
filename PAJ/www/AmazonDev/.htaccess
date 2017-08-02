@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# trailing slash
+RewriteCond %{REQUEST_URI} !(/$|\.)
+RewriteRule (.*) %{REQUEST_URI}/ [R=301,L]
+
+
+RewriteCond %{REQUEST_URI} [A-Z]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-l
+RewriteRule (.*) ${lc:$1} [R=301,L]

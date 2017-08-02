@@ -6,7 +6,7 @@
  *
  */
 
-namespace PAJ\Application\Amazon\Alexa\Launch;
+namespace PAJ\Application\AmazonDev\Alexa\Launch;
 
 /**
  * ALEXA LAUNCH CLASS
@@ -17,7 +17,7 @@ class example {
 
 	public static function launch()
 	{
-		$_response='This ia a hello world alexa php ecample skill!';
+		$_response='This ia a hello world alexa php example skill!';
 		$_card=array(
 			'title' => 'Hello World',
 			'text' => $_response,
