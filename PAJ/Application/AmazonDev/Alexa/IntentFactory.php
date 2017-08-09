@@ -14,6 +14,7 @@
 namespace PAJ\Application\AmazonDev\Alexa;
 use PAJ\Application\AmazonDev\Data;
 use PAJ\Application\AmazonDev\Alexa\IntentException;
+use PAJ\Library\Minify\JSON;
 
 class IntentFactory implements Data
 {
@@ -24,7 +25,6 @@ class IntentFactory implements Data
 
     public function __construct
 	(
-
 
 	)
     {
@@ -59,6 +59,12 @@ class IntentFactory implements Data
 
     }
 
+/**
+ * Render Exceptions
+ * @param  $e     Exception
+ * @param  string $_type Type of exception
+ * @return void
+ */
     private function exceptionError($e,$_type='Exception')
     {
         $this->set('errorMessage', $_type. ' ERROR : '. $e->getMessage(). "\n". $this->getExceptionTraceAsString($e));
@@ -76,7 +82,10 @@ class IntentFactory implements Data
         $this->respond('Sorry, an Error has occurred. The error has been logged and we are working on it!');
         exit;
     }
-
+/**
+ * Render the response from the intent
+ * @return void
+ */
     public function renderAlexaResponse()
     {
         // ouput methods
@@ -88,16 +97,14 @@ class IntentFactory implements Data
 
 		// buld classes for rendering
 		//
+		// Intent
 		$_alexaIntent=false;
-
         if (isset($_alexaRequest['request']['intent']['name'])){$_alexaIntent=$_alexaRequest['request']['intent']['name'];}
-
-        // debug
-        //$_alexaIntent='HelloWorld';
-
         $_alexaIntentClass = __NAMESPACE__ . '\\Intent\\'.ucfirst($_alexaIntent);
 
-		$_alexaLaunchClass=false;
+        // launch / Help
+        //
+        $_alexaLaunchClass=false;
 		$_alexaHelpClass=false;
 		$_applicationID=explode('-',$_alexaRequest['session']['application']['applicationId']);
 		if (isset($_applicationID[4])){$_alexaLaunchClass = __NAMESPACE__ . '\\Launch\\'.$_applicationID[4];}
@@ -105,34 +112,33 @@ class IntentFactory implements Data
 
 		// render response for type LaunchRequest
 		//
+		if ($_alexaRequest['request']['type']=='LaunchRequest')
+		{
 
-			if ($_alexaRequest['request']['type']=='LaunchRequest')
+			if (class_exists($_alexaLaunchClass))
 			{
+				$_launchResponse=$_alexaLaunchClass::launch();
+				$_response=$_launchResponse['response'];
+				$_card=$_launchResponse['card'];
+				$_endSession=$_launchResponse['endsession'];
+				$_sessionAttributes=$_launchResponse['sessionattributes'];
+				$_outputSSML=$_launchResponse['outputssml'];
 
-				if (class_exists($_alexaLaunchClass))
-				{
-					$_launchResponse=$_alexaLaunchClass::launch();
-					$_response=$_launchResponse['response'];
-					$_card=$_launchResponse['card'];
-					$_endSession=$_launchResponse['endsession'];
-					$_sessionAttributes=$_launchResponse['sessionattributes'];
-					$_outputSSML=$_launchResponse['outputssml'];
-
-				} else {
+			} else {
 
 
-					$_response='Hello, how can I be of assistance?';
-					$_card=false;
-					$_endSession=false;
-					$_sessionAttributes=false;
-					$_outputSSML=false;
+				$_response='Hello, how can I be of assistance?';
+				$_card=false;
+				$_endSession=false;
+				$_sessionAttributes=false;
+				$_outputSSML=false;
 
 
-				}
-
-				$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
-				exit;
 			}
+
+			$this->respond($_response,$_card,$_endSession,$_sessionAttributes,$_outputSSML);
+			exit;
+		}
 
 
 		// render response for type IntentRequest
@@ -194,7 +200,7 @@ class IntentFactory implements Data
 			//
 			$this->set('applicationName',ucfirst($_alexaIntent));
 
-			// instantiate render class
+			// instantiate intent class
 			//
 			$_obj = new $_alexaIntentClass
             (
@@ -202,15 +208,16 @@ class IntentFactory implements Data
             );
 
 			$_success=$_obj->get('success');
-			$_output=$_obj->get('output');
-
-			unset($_obj);
+                $_output=$_obj->get('output');
+                    unset($_obj);
 
 			$_response='ERROR';
 
 			if ($_success)
 			{
-				$_response=$_output['intent'][$_alexaIntent]['response'];
+                // build response
+                //
+                $_response=$_output['intent'][$_alexaIntent]['response'];
 				$_card=$_output['intent'][$_alexaIntent]['card'];
 				$_endSession=$_output['intent'][$_alexaIntent]['endsession'];
 				$_sessionAttributes=$_output['intent'][$_alexaIntent]['sessionattributes'];
@@ -233,14 +240,22 @@ class IntentFactory implements Data
                 );
 			}
 
+            // fin!
             exit;
 		}
 
     }
 
-    //
-    // return json response to amazon
-    //
+
+/**
+ * Return json response to amazon
+ * @param  string  $_alexaResponse     Alexa response text
+ * @param  boolean $_card              Enable/Disable card
+ * @param  boolean $_endSession        End Session
+ * @param  boolean $_sessionAttributes Include Session Attributes data
+ * @param  boolean $_outputSSML        Use SSML true/false
+ * @return void
+ */
     private function respond($_alexaResponse, $_card=false, $_endSession=true, $_sessionAttributes=false, $_outputSSML=false) {
 
         $_cardJSON='';
@@ -326,16 +341,17 @@ class IntentFactory implements Data
 
         // minify
         //
-        $_json=\PAJ\Library\Minify\JSON::minify($_json);
+        $_json=JSON::minify($_json);
 
 
         // header
         //
         header('Content-Type: application/json;charset=UTF-8');
         header('Content-Length: ' . strlen($_json));
+
         // data
+        //
         echo $_json;
-        // done!
 
     }
 

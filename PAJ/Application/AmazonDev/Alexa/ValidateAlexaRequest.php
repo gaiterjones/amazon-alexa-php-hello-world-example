@@ -32,25 +32,15 @@ class ValidateAlexaRequest implements Security
     {
         $this->loadEnvironment($_environment);
 
+        if ($this->get('debug')){$this->debug();}
+
         try {
 
-            if ($this->get('debug')){$this->debug();}
             $this->validateAlexaRequest();
 
         } catch (ValidateRequestException  $e) {
 
-            if ($this->get('debug'))
-            {
-                // log errors
-                //
-                $this->__log->writeLogFile($e->getMessage(),$this->get('amazonLogFile'));
-
-            }
-
-            // validation failure
-            //
-            header('alexa request validation failed : ' .$e->getMessage(), true, 400);
-            exit;
+            $this->exceptionError($e,'ValidateRequestException');
         }
     }
 
@@ -60,8 +50,6 @@ class ValidateAlexaRequest implements Security
     //
     //
     //
-
-
     private function validateAlexaRequest()
     {
 
@@ -81,19 +69,8 @@ class ValidateAlexaRequest implements Security
     private function validateEnvironment()
     {
         if (php_sapi_name() === 'cli') {exit;}
-
-        // debug
-        //
-        if(isset($_GET['debug']))
-        {
-            $_now = new \DateTime(null, new \DateTimeZone('UTC'));
-
-            // show debug info
-            //
-            echo 'DEBUG!';
-            exit;
-        }
     }
+
     private function validateSourceIPAddress()
     {
         if (!filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE))
@@ -247,7 +224,7 @@ class ValidateAlexaRequest implements Security
 
 			if (($_now->getTimestamp() - $_alexaRequestTimestamp->getTimestamp()) > 60)
 			{
-				throw new ValidateRequestException('timestamp validation failure.. Current time: ' . $_now->format('Y-m-d\TH:i:s\Z') . ' vs. Timestamp: ' . $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'));
+				throw new ValidateRequestException('timestamp validation failure: current time: ' . $_now->format('Y-m-d\TH:i:s\Z') . ' vs. timestamp: ' . $_alexaRequestTimestamp->format('Y-m-d\TH:i:s\Z'));
 			}
     }
 
@@ -348,6 +325,48 @@ class ValidateAlexaRequest implements Security
 		return $arrHttpHeaders;
 
 	}
+
+    private function exceptionError($e,$_type='Exception')
+    {
+        if ($this->get('debug'))
+        {
+            // log errors
+            //
+            $this->__log->writeLogFile($e->getMessage(),$this->get('amazonLogFile'));
+
+        }
+
+        if(isset($_GET['debug']))
+        {
+            $_now = new \DateTime(null, new \DateTimeZone('UTC'));
+
+            // show debug info
+            //
+            echo '
+<h1>'. __CLASS__. '</h1>
+<h1>debug</h1>
+<pre>
+    time : '. $_now->format('Y-m-d\TH:i:s\Z'). '
+    error :	'.  $e->getMessage(). '
+    debug :	logfolder '. (is_writable($this->get('amazonLogFolder')) ? 'is writeable' : 'is NOT writeable'). '
+</pre>
+<p>Error <em>HTTP GET when POST was expected</em> is normal when browsing this page, use curl from command line to debug validation with POST data :</p>
+<pre style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">
+curl -H "Content-Type: application/json" -H "SignatureCertChainUrl: https://s3.amazonaws.com/echo.api/echo-api-cert-2.pem" -H "Signature: OMEN68E8S0H9vTHRBVQMmWxeXLV8hpQoodoU6NdLAUB12BjGVvOAgCq7LffPDKCW7zXI6wRc3dx0pklYWqZHXbNsMfx8xSN3lqJTYw6zLZGwt2MgcjajHa1AnMbTnZOjrq9WPZuFG0pyJj9ucKB0w/k4r123vOLzVI0pEISo3WTIDsfKMycIpGiNcDHdJIc2LQGG5Bum9TFJuUllpt5c5LQC9g1rKIS2nj55QCQ8a3EeeqDe3N85Sw6OT7k7oPkKVLPee5fAWfkQQqW1fmA7sGIWKDpVTi1Jq46I2MiJM+48m+rxOVEPXky3j8u8+lPWg6vOnKogoXTb52foAurmAA==" -X POST -d "{\"version\":\"1.0\",\"session\":{\"new\":true,\"sessionId\":\"amzn1.echo-api.session\",\"application\":{\"applicationId\":\"'.$this->__config->get('amazonSkillId').'\"},\"user\":{\"userId\":\"'. $this->__config->get('amazonUserId'). '\",\"accessToken\":\"token\"}},\"request\":{\"type\":\"'. $_type. '\",\"requestId\":\"amzn1.echo-api.request\",\"timestamp\":\"'. $_now->format('Y-m-d\TH:i:s\Z'). '\"}}" --verbose https://'
+    . $_SERVER[HTTP_HOST].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER[REQUEST_URI]). '
+</pre>
+<a href="http://blog.gaiterjones.com">blog.gaiterjones.com</a>
+            ';
+
+        exit;
+
+        }
+
+        // validation failure
+        //
+        header('alexa request validation error : ' .$e->getMessage(), true, 400);
+        exit;
+    }
 
     //
     //
