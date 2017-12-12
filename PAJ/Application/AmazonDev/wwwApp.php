@@ -86,7 +86,7 @@ class wwwApp implements Application
  */
     public function loadConfig()
     {
-        $_version='BETA v0.2.0';
+        $_version='v0.2.1';
 		$_versionNumber=explode('-',$_version);
 		$_versionNumber=$_versionNumber[0];
 
