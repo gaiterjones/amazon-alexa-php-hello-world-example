@@ -1,6 +1,6 @@
 <?php
 /**
- *  
+ *
  *  Copyright (C) 2017 paj@gaiterjones.com
  *
  *
@@ -10,12 +10,12 @@ namespace PAJ\Application\AmazonDev\Alexa\Launch;
 
 /**
  * ALEXA LAUNCH CLASS
- * 
+ * RENAME this class to the last section of the skill id
  */
-class example {
+class launch123 {
 
 
-	public static function launch()
+	public static function launch($_alexaRequest=false)
 	{
 		$_response='This ia a hello world alexa php example skill!';
 		$_card=array(
@@ -34,8 +34,8 @@ class example {
 			'sessionattributes' => $_sessionAttributes,
 			'outputssml' => $_outputSSML
 		);
-		
+
 	}
-	
+
 }
 ?>

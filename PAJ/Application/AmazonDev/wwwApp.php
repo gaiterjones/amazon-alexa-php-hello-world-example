@@ -29,7 +29,7 @@ class wwwApp implements Application
 /**
  * Constructor
  * @param Configuration $config   Application config
- * @param Security      $security Securiry Library
+ * @param Security      $security Security Factory
  * @param Log           $log      Logging Library
  * @param Request       $request  Request Factory
  * @param Data          $data     Data Factory
@@ -131,7 +131,10 @@ class wwwApp implements Application
  */
     public function loadSecurity()
     {
-        $this->__security->loadSecurity($this->__environment);
+        $this->__security->loadSecurity
+        (
+            $this->__environment
+        );
     }
 
 
@@ -146,7 +149,10 @@ class wwwApp implements Application
  */
     public function getData()
     {
-        $this->__data->getData($this->__environment);
+        $this->__data->getData
+        (
+            $this->__environment
+        );
     }
 
 //

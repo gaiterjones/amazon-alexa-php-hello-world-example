@@ -17,14 +17,15 @@ Passes Amazon security validation for Public Skills
 
 ### Version
 ***
-	@version		0.2.0
-	@since			07 2017
+	@version		0.2.1
+	@since			12 2017
 	@author			gaiterjones
 	@documentation	http://blog.gaiterjones.com/amazon-alexa-php-hello-world-example/
 
 ## Changes
 
-0.2.0 - restructured code
+12.12.2017 - 0.2.1 - bug fixes
+             0.2.0 - restructured code
 
 ## License
 

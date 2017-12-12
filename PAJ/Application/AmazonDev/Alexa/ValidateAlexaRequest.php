@@ -328,6 +328,7 @@ class ValidateAlexaRequest implements Security
 
     private function exceptionError($e,$_type='Exception')
     {
+
         if ($this->get('debug'))
         {
             // log errors

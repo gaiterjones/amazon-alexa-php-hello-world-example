@@ -107,8 +107,8 @@ class IntentFactory implements Data
         $_alexaLaunchClass=false;
 		$_alexaHelpClass=false;
 		$_applicationID=explode('-',$_alexaRequest['session']['application']['applicationId']);
-		if (isset($_applicationID[4])){$_alexaLaunchClass = __NAMESPACE__ . '\\Launch\\'.$_applicationID[4];}
-		if (isset($_applicationID[4])){$_alexaHelpClass = __NAMESPACE__ . '\\Help\\'.$_applicationID[4];}
+		if (isset($_applicationID[4])){$_alexaLaunchClass = __NAMESPACE__ . '\\Launch\\launch'.$_applicationID[4];}
+		if (isset($_applicationID[4])){$_alexaHelpClass = __NAMESPACE__ . '\\Help\\help'.$_applicationID[4];}
 
 		// render response for type LaunchRequest
 		//
@@ -117,7 +117,7 @@ class IntentFactory implements Data
 
 			if (class_exists($_alexaLaunchClass))
 			{
-				$_launchResponse=$_alexaLaunchClass::launch();
+				$_launchResponse=$_alexaLaunchClass::launch($_alexaRequest);
 				$_response=$_launchResponse['response'];
 				$_card=$_launchResponse['card'];
 				$_endSession=$_launchResponse['endsession'];
