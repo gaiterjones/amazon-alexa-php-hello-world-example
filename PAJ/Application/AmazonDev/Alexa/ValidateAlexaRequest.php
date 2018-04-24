@@ -354,7 +354,7 @@ class ValidateAlexaRequest implements Security
 <p>Error <em>HTTP GET when POST was expected</em> is normal when browsing this page, use curl from command line to debug validation with POST data :</p>
 <pre style="white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word;">
 curl -H "Content-Type: application/json" -H "SignatureCertChainUrl: https://s3.amazonaws.com/echo.api/echo-api-cert-2.pem" -H "Signature: OMEN68E8S0H9vTHRBVQMmWxeXLV8hpQoodoU6NdLAUB12BjGVvOAgCq7LffPDKCW7zXI6wRc3dx0pklYWqZHXbNsMfx8xSN3lqJTYw6zLZGwt2MgcjajHa1AnMbTnZOjrq9WPZuFG0pyJj9ucKB0w/k4r123vOLzVI0pEISo3WTIDsfKMycIpGiNcDHdJIc2LQGG5Bum9TFJuUllpt5c5LQC9g1rKIS2nj55QCQ8a3EeeqDe3N85Sw6OT7k7oPkKVLPee5fAWfkQQqW1fmA7sGIWKDpVTi1Jq46I2MiJM+48m+rxOVEPXky3j8u8+lPWg6vOnKogoXTb52foAurmAA==" -X POST -d "{\"version\":\"1.0\",\"session\":{\"new\":true,\"sessionId\":\"amzn1.echo-api.session\",\"application\":{\"applicationId\":\"'.$this->__config->get('amazonSkillId').'\"},\"user\":{\"userId\":\"'. $this->__config->get('amazonUserId'). '\",\"accessToken\":\"token\"}},\"request\":{\"type\":\"'. $_type. '\",\"requestId\":\"amzn1.echo-api.request\",\"timestamp\":\"'. $_now->format('Y-m-d\TH:i:s\Z'). '\"}}" --verbose https://'
-    . $_SERVER[HTTP_HOST].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER[REQUEST_URI]). '
+    . $_SERVER['HTTP_HOST'].str_replace('?'.$_SERVER['QUERY_STRING'],'',$_SERVER['REQUEST_URI']). '
 </pre>
 <a href="http://blog.gaiterjones.com">blog.gaiterjones.com</a>
             ';
